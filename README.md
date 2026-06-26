@@ -1,54 +1,79 @@
-# GtmCrew Crew
+# GTM Multi-Agent Research & Planning System (n8n + CrewAI)
 
-Welcome to the GtmCrew Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
+A multi-agent system that automates market research and go-to-market (GTM) 
+planning for WE+, LLC's Performance Architecture Sprint offering. Implemented 
+in two parallel tracks — **n8n** and **CrewAI** — both connected to a shared 
+MCP (Model Context Protocol) research server.
 
-## Installation
+## Demo & Screenshots
+📊 [View workflow screenshots & demo (Gamma)](https://gamma.app/docs/GTM-Stratgey-Screenshots--oji6cakc4hqyhke)
 
-Ensure you have Python >=3.10 <3.14 installed on your system. This project uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling, offering a seamless setup and execution experience.
+## Architecture
 
-First, if you haven't already, install uv:
+- **MCP Server** (`~/mcp-research-server`): exposes `web_search` (via SerpAPI), 
+  `fetch_page` (with local caching), and `docs_write` tools to both implementations.
+- **CrewAI implementation** (`src/gtm_crew/`): 4 agents — Head Planner, Research 
+  Agent, Analyst Agent, Strategy Agent — chained through 5 sequential tasks 
+  (plan_research → gather_evidence → analyze_market → draft_gtm_plan → export_doc).
+- **n8n implementation** (`docs/n8n_workflow_export.json`): Trigger → Head Planner 
+  → Research Agent → Analyst Agent → Strategy Agent → Docs Writer, using n8n AI 
+  Agent nodes + an MCP Client Tool node pointing at the same MCP server.
 
-```bash
-pip install uv
-```
+## Setup
 
-Next, navigate to your project directory and install the dependencies:
+### CrewAI
+\`\`\`bash
+cd gtm_crew
+uv sync
+uv run gtm_crew
+\`\`\`
 
-(Optional) Lock the dependencies and install them by using the CLI command:
-```bash
-crewai install
-```
-### Customizing
+### n8n
+\`\`\`bash
+n8n start
+# import docs/n8n_workflow_export.json via the n8n editor UI
+\`\`\`
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
+### MCP Server
+\`\`\`bash
+cd mcp-research-server
+uv sync
+uv run server.py
+\`\`\`
 
-- Modify `src/gtm_crew/config/agents.yaml` to define your agents
-- Modify `src/gtm_crew/config/tasks.yaml` to define your tasks
-- Modify `src/gtm_crew/crew.py` to add your own logic, tools and specific args
-- Modify `src/gtm_crew/main.py` to add custom inputs for your agents and tasks
+## Testing & KPIs
 
-## Running the Project
+Tests live in \`tests/\` and run via:
+\`\`\`bash
+uv run pytest tests/ -v
+\`\`\`
 
-To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
+KPI rubric (\`scripts/score_gtm_plan.py\` + \`PHASE5_KPI_RUBRIC.md\`) checks:
+- ✅ Coverage — research questions answered with linked sources
+- ✅ Source quality — citation coverage, source diversity, 0% broken links
+- ✅ Latency — brief to drafted GTM document
+- ✅ Strategy quality — structural completeness (ICPs, value prop, messaging, channels)
+- ✅ Reproducibility — consistent facts across runs
+- ✅ Cost efficiency — within budget cap
 
-```bash
-$ crewai run
-```
+All six KPIs are passing on the CrewAI implementation's output.
 
-This command initializes the gtm_crew Crew, assembling the agents and assigning them tasks as defined in your configuration.
+## Sample Output
 
-This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
+A real generated GTM plan (with inline citations and a Sources section) is 
+included in this repo for reference.
 
-## Understanding Your Crew
+## n8n vs CrewAI Comparison
 
-The gtm_crew Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
+*Pending* — the n8n workflow has been built and connected to the shared MCP 
+server but has not yet been load-tested or formally compared against the 
+CrewAI implementation on cost, latency, and reliability. This section will be 
+completed once comparative testing is finished.
 
-## Support
+## Google Docs Export
 
-For support, questions, or feedback regarding the GtmCrew Crew or crewAI.
-- Visit our [documentation](https://docs.crewai.com)
-- Reach out to us through our [GitHub repository](https://github.com/joaomdmoura/crewai)
-- [Join our Discord](https://discord.com/invite/X4JWnZnxPb)
-- [Chat with our docs](https://chatg.pt/DWjSBZn)
-
-Let's create wonders together with the power and simplicity of crewAI.
+Programmatic Google Docs/Drive API export was attempted via service account 
+and OAuth Desktop flows but was blocked by Drive storage quota limits on 
+personal (non-Workspace) accounts. \`docs_write\` currently exports to local 
+markdown by design; the sample Google Docs deliverable was created by manually 
+pasting generated output into a Google Doc.
