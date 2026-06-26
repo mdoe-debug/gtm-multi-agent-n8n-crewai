@@ -1,0 +1,70 @@
+plan_research:
+  description: >
+    Given the WE+, LLC project brief, decompose it into a prioritized list
+    of specific, answerable research questions covering competitors,
+    pricing models, buyer objections, governance frameworks, and market
+    signals — segmented by SMB vs. enterprise and for-profit vs. nonprofit
+    where relevant.
+  expected_output: >
+    A JSON list of research questions, each with a priority tag (high/medium/low)
+    and a short note on which segment(s) it applies to.
+  agent: head_planner
+
+gather_evidence:
+  description: >
+    For each research question from the planning stage, use the web_search
+    and fetch_page tools to find and verify supporting facts. Every fact
+    must include an evidence_id, source_url, source_title, publisher_tier,
+    and retrieved_at timestamp. If a page cannot be fetched, fall back to
+    the search snippet and note the limitation. Do not state any fact
+    without a linked source.
+  expected_output: >
+    A JSON array of evidence objects per the evidence schema, grouped by
+    research question.
+  agent: research_agent
+  context:
+    - plan_research
+
+analyze_market:
+  description: >
+    Using the gathered evidence, build a competitor table (name, offering,
+    pricing model, target segment), a pricing matrix, and a qualitative
+    synthesis using SWOT and 4P frameworks. For every claim, cite the
+    evidence's source_url and source_title directly (e.g. "(Source: Gartner,
+    https://...)"), not just the evidence_id, so sourcing survives into
+    later stages.
+  expected_output: >
+    Markdown tables for the competitor and pricing comparisons, plus a
+    structured SWOT/4P synthesis, all evidence-cited.
+  agent: analyst_agent
+  context:
+    - gather_evidence
+
+draft_gtm_plan:
+  description: >
+    Using the market analysis, draft a GTM plan for WE+, LLC's Performance
+    Architecture Sprint offering. Include ICPs (segmented by company size
+    and sector), value proposition, messaging, channels, and a launch plan
+    with rough timeline. Flag any section lacking supporting evidence
+    instead of inventing claims. For every factual or statistical claim,
+    include an inline citation in the form (Source: source_title, source_url)
+    drawn from the evidence's source_url field — never just the internal
+    evidence_id. End the document with a "## Sources" section listing every
+    unique source_url and source_title cited anywhere in the plan.
+  expected_output: >
+    A structured GTM plan in markdown with clear headers for each required
+    section (ICPs, Value Proposition, Messaging, Channels, Launch Plan).
+  agent: strategy_agent
+  context:
+    - analyze_market
+
+export_doc:
+  description: >
+    Take the final GTM plan markdown and export it using the docs_write
+    tool, with a clear title referencing WE+, LLC and the Performance
+    Architecture Sprint.
+  expected_output: >
+    Confirmation of where the document was saved (filename or doc URL).
+  agent: head_planner
+  context:
+    - draft_gtm_plan
