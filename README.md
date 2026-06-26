@@ -113,3 +113,13 @@ Given the upstream nature of the bug, `crewai run` (the stable, documented
 execution path) is used for demonstrating the working multi-agent system. 
 Screenshots of `crewai run` execution are included below as the chatbot/
 interaction deliverable.
+
+### Note: Harmless Non-Zero Exit on `crewai run`
+
+`crewai run` sometimes prints `An error occurred while running the crew: 
+Command ['uv', 'run', 'run_crew'] returned non-zero exit status 1` even after 
+the crew completes successfully (all agents finish, final output is produced, 
+and the file is written correctly to `~/mcp-research-server/`). Checking 
+`echo $?` after the run confirms the actual shell exit code is 0. This 
+appears to be a CLI-wrapper-level reporting quirk in CrewAI 1.14.7, not a 
+functional failure.
