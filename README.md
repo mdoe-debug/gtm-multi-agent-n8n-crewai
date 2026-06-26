@@ -22,33 +22,33 @@ MCP (Model Context Protocol) research server.
 ## Setup
 
 ### CrewAI
-\`\`\`bash
+```bash
 cd gtm_crew
 uv sync
 uv run gtm_crew
-\`\`\`
+```
 
 ### n8n
-\`\`\`bash
+```bash
 n8n start
 # import docs/n8n_workflow_export.json via the n8n editor UI
-\`\`\`
+```
 
 ### MCP Server
-\`\`\`bash
+```bash
 cd mcp-research-server
 uv sync
 uv run server.py
-\`\`\`
+```
 
 ## Testing & KPIs
 
-Tests live in \`tests/\` and run via:
-\`\`\`bash
+Tests live in `tests/` and run via:
+```bash
 uv run pytest tests/ -v
-\`\`\`
+```
 
-KPI rubric (\`scripts/score_gtm_plan.py\` + \`PHASE5_KPI_RUBRIC.md\`) checks:
+KPI rubric (`scripts/score_gtm_plan.py` + `PHASE5_KPI_RUBRIC.md`) checks:
 - ✅ Coverage — research questions answered with linked sources
 - ✅ Source quality — citation coverage, source diversity, 0% broken links
 - ✅ Latency — brief to drafted GTM document
@@ -74,42 +74,42 @@ completed once comparative testing is finished.
 
 Programmatic Google Docs/Drive API export was attempted via service account 
 and OAuth Desktop flows but was blocked by Drive storage quota limits on 
-personal (non-Workspace) accounts. \`docs_write\` currently exports to local 
+personal (non-Workspace) accounts. `docs_write` currently exports to local 
 markdown by design; the sample Google Docs deliverable was created by manually 
 pasting generated output into a Google Doc.
 
 ## Known Issue: `crewai chat` Function Registration
 
-While building out the CrewAI chatbot deliverable, \`crewai chat\` consistently 
+While building out the CrewAI chatbot deliverable, `crewai chat` consistently 
 failed with:
 
-\`\`\`
+```
 WARNING:root:Function 'gtm_crew' not found in available functions
-\`\`\`
+```
 
 ### Diagnostic steps taken
 
-1. Confirmed the \`[project.scripts]\` entry point (\`gtm_crew = "gtm_crew.main:run"\`) 
-   matched the \`[project] name\` field in \`pyproject.toml\` — no mismatch found.
-2. Inspected \`GtmCrew\` (the \`@CrewBase\`-decorated class) — confirmed \`crew.name\` 
-   resolves to \`"GtmCrew"\`, matching expectations.
-3. Found that none of the task descriptions in \`tasks.yaml\` used \`{placeholder}\` 
-   syntax, which \`crewai chat\` requires to introspect and build its input schema. 
-   Added a \`{project_brief}\` placeholder to \`plan_research\` and updated 
-   \`main.py\`'s \`run()\` to accept \`project_brief\` as a parameter (previously 
-   \`run()\` took no arguments, hardcoding the brief).
+1. Confirmed the `[project.scripts]` entry point (`gtm_crew = "gtm_crew.main:run"`) 
+   matched the `[project] name` field in `pyproject.toml` — no mismatch found.
+2. Inspected `GtmCrew` (the `@CrewBase`-decorated class) — confirmed `crew.name` 
+   resolves to `"GtmCrew"`, matching expectations.
+3. Found that none of the task descriptions in `tasks.yaml` used `{placeholder}` 
+   syntax, which `crewai chat` requires to introspect and build its input schema. 
+   Added a `{project_brief}` placeholder to `plan_research` and updated 
+   `main.py`'s `run()` to accept `project_brief` as a parameter (previously 
+   `run()` took no arguments, hardcoding the brief).
 4. After this fix, chat mode successfully held a coherent conversation and asked 
    clarifying questions — but still failed with the same "Function not found" 
    warning at the moment it tried to actually invoke the crew.
 5. Researched the error against CrewAI's GitHub issues and found multiple open, 
-   unresolved reports of \`crewai chat\` breaking independent of project 
+   unresolved reports of `crewai chat` breaking independent of project 
    configuration (crewAIInc/crewAI#3934, #3430, #3277) — indicating this is a 
    framework-level bug in CrewAI 1.14.7's chat-mode tool-registration logic, 
    not a configuration error in this project.
 
 ### Resolution
 
-Given the upstream nature of the bug, \`crewai run\` (the stable, documented 
+Given the upstream nature of the bug, `crewai run` (the stable, documented 
 execution path) is used for demonstrating the working multi-agent system. 
-Screenshots of \`crewai run\` execution are included below as the chatbot/
+Screenshots of `crewai run` execution are included below as the chatbot/
 interaction deliverable.
